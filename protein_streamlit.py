@@ -88,13 +88,12 @@ st.markdown(f"##### Display top3 similar proteins")
 # Find similar proteins of the selected protein
 df = session.sql(f"""
                 SELECT 
-                    uniprotid, 
-                    VECTOR_L2_DISTANCE(emb,  (select emb from BIONEMO_DB.PUBLIC.PROTEINS where uniprotid = '{protein}')::VECTOR(FLOAT,1024)) as distance,
+                    UNIPROTID, 
+                    VECTOR_L2_DISTANCE(EMB,(SELECT EMB FROM BIONEMO_DB.PUBLIC.PROTEINS WHERE UNIPROTID = 'P61260')::VECTOR(FLOAT,1024)) AS DISTANCE,
                     EMB
-                from BIONEMO_DB.PUBLIC.PROTEINS
-                order by distance asc
-                limit 4"""
-)
+                FROM BIONEMO_DB.PUBLIC.PROTEINS
+                ORDER BY DISTANCE ASC
+                LIMIT 4""")
 similar_protein_list = df.select(col('UNIPROTID')).to_pandas().values.tolist()
 similar_protein_list_all = [x for xs in similar_protein_list for x in xs]
 
