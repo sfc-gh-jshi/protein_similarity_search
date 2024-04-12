@@ -1,0 +1,18 @@
+spec:
+  containers:
+  - name: "js-protein-streamlit-dev"
+    image: "sfsenorthamerica-polaris2.registry.snowflakecomputing.com/bionemo_db/public/bionemo_repo/jason:latest"
+    env:
+      SNOWFLAKE_WAREHOUSE: "compute_wh"
+    volumeMounts:
+    - name: "pdb"
+      mountPath: "/app/pdb"
+  volumes:
+  - name: "pdb"
+    source: "@BIONEMO_DB.PUBLIC.LLM_WORKSPACE"
+    uid: 1000
+    gid: 1000
+  endpoints:
+  - name: "streamlit"
+    port: 8080
+    public: True
