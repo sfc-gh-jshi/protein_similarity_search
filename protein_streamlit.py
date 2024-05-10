@@ -44,7 +44,7 @@ def setupsession() -> Session:
 session = setupsession()
 
 def find_nth(haystack, needle, n):
-    parts= haystack.split(needle, n+1)
+    parts = haystack.split(needle, n+1)
     if len(parts)<=n+1:
         return -1
     return len(haystack)-len(parts[-1])-len(needle)
@@ -70,39 +70,55 @@ def viz(id, bck):
     xyzview.setBackgroundColor(bck)#('0xeeeeee')
     xyzview.spin(True)
     xyzview.zoomTo()
-    showmol(xyzview,height=350,width=800) 
+    showmol(xyzview, height=350, width=400) 
+
+def get_function(seq):
+    df = session.sql(f"""
+                    SELECT 
+                        FUNCTION
+                    FROM BIONEMO_DB.PUBLIC.PROTEIN_SEQUENCE_FUNCTION
+                    WHERE UNIPROTID = '{seq}'""")
+    protein_function = str(df.select(col('FUNCTION')).to_pandas().values)[3:-3]
+    return protein_function
 
 # Create the Streamlit
 protein_list = ['P04637','P83302']
 st.sidebar.title('Show Similar Proteins')
-protein=st.sidebar.selectbox('Select a protein to match 3 different proteins based on the ProtT5 embeddings:', protein_list)
-info0=get_desc(protein)
-st.sidebar.write(f"**UniProtId:** {info0[0]}")
-st.sidebar.write(f"**Organism:** {info0[1]}")
-st.sidebar.write(info0[2])
-st.write(f"Base Protein: **{protein}**")
-viz(protein, '#00f900')
-st.markdown(f"### Similar Protein:")
-st.markdown(f"##### Display top3 similar proteins")
+protein = st.sidebar.text_input('Input a protein to match 3 different proteins based on the ProtT5 embeddings:')
+info0 = get_desc(protein)
+desc = get_function(protein)
 
-# Find similar proteins of the selected protein
+col1, col2 = st.columns(2)
+with col1:
+    st.write(f"Base Protein: **{protein}**")
+    viz(protein, 'white')
+with col2:
+    st.write(f"**UniProtId:** {info0[0]}")
+    st.write(f"**Organism:** {info0[1]}")
+    st.text_area(label = '**Function:**', value = desc)
+
+    # Find similar proteins of the selected protein
 df = session.sql(f"""
-                SELECT 
-                    UNIPROTID, 
-                    VECTOR_L2_DISTANCE(EMB,(SELECT EMB FROM BIONEMO_DB.PUBLIC.PROTEINS WHERE UNIPROTID = 'P61260')::VECTOR(FLOAT,1024)) AS DISTANCE,
-                    EMB
-                FROM BIONEMO_DB.PUBLIC.PROTEINS
-                ORDER BY DISTANCE ASC
-                LIMIT 4""")
+                    SELECT 
+                        UNIPROTID, 
+                        VECTOR_L2_DISTANCE(EMB,(SELECT EMB FROM BIONEMO_DB.PUBLIC.PROTEINS WHERE UNIPROTID = '{protein}')::VECTOR(FLOAT,1024)) AS DISTANCE,
+                        EMB
+                    FROM BIONEMO_DB.PUBLIC.PROTEINS
+                    ORDER BY DISTANCE ASC
+                    LIMIT 4""")
 similar_protein_list = df.select(col('UNIPROTID')).to_pandas().values.tolist()
 similar_protein_list_all = [x for xs in similar_protein_list for x in xs]
 
 # Display similar proteins
+cols = st.columns(3)
+j = 0
 for i in similar_protein_list_all:
     if i not in protein_list:
-        info=get_desc(i)
-        st.write(f"Matching Protein: **{i}**")
-        st.write(f"**UniProtId:** {info[0]}")
-        st.write(f"**Organism:** {info[1]}")
-        st.write(info[2])
-        viz(i, 'white')
+        info = get_desc(i)
+        with cols[j%3]:
+            st.write(f"Matching Protein: **{i}**")
+            st.write(f"**UniProtId:** {info[0]}")
+            st.write(f"**Organism:** {info[1]}")
+            st.write(info[2])
+            viz(i, 'white')
+    j += 1
