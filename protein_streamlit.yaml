@@ -1,7 +1,7 @@
 spec:
   containers:
-  - name: "js-protein-streamlit-dev"
-    image: "sfsenorthamerica-polaris2.registry.snowflakecomputing.com/bionemo_db/public/bionemo_repo/jason:latest"
+  - name: "<container name>"
+    image: "<your image repo URL>"
     env:
       SNOWFLAKE_WAREHOUSE: "compute_wh"
     volumeMounts:
