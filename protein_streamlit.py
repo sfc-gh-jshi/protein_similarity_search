@@ -79,7 +79,7 @@ def get_function(seq):
     df = session.sql(f"""
                     SELECT 
                         FUNCTION
-                    FROM BIONEMO_DB.PUBLIC.PROTEIN_SEQUENCE_FUNCTION
+                    FROM BIONEMO_DB.PROTEIN.PROTEIN_SEQUENCE_FUNCTION
                     WHERE SEQUENCE = '{seq}'""")
     protein_function = str(df.select(col('FUNCTION')).to_pandas().values)[3:-3]
     return protein_function
@@ -109,9 +109,9 @@ try:
     df = session.sql(f"""
                         SELECT 
                             UNIPROTID, 
-                            VECTOR_L2_DISTANCE(EMB,(SELECT EMB FROM BIONEMO_DB.PUBLIC.PROTEINS WHERE UNIPROTID = '{uniprotid}')::VECTOR(FLOAT,1024)) AS DISTANCE,
+                            VECTOR_L2_DISTANCE(EMB,(SELECT EMB FROM BIONEMO_DB.PROTEIN.PROTEIN_SEQUENCE_FUNCTION WHERE UNIPROTID = '{uniprotid}')::VECTOR(FLOAT,1024)) AS DISTANCE,
                             EMB
-                        FROM BIONEMO_DB.PUBLIC.PROTEINS
+                        FROM BIONEMO_DB.PROTEIN.PROTEIN_SEQUENCE_FUNCTION
                         ORDER BY DISTANCE ASC
                         LIMIT 4""")
     similar_protein_list = df.select(col('UNIPROTID')).to_pandas().values.tolist()
